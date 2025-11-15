@@ -8,6 +8,14 @@ import joblib
 # Load cleaned dataset
 df = pd.read_csv("dataset_cleaned.csv")
 
+
+
+# FIX: Convert labels to 2 categories
+df['label'] = df['label'].replace({
+    'social_engineering': 'unsafe',
+    'safe': 'safe'
+})
+
 # Features and labels
 X = df['message']
 y = df['label']

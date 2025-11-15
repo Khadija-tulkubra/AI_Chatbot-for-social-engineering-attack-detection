@@ -2,12 +2,10 @@
 import { useState } from "react";
 
 export default function Home() {
-
   const [chats, setChats] = useState([
     { id: Date.now(), title: "New Chat", messages: [] },
   ]);
   const [activeIdx, setActiveIdx] = useState(0);
-
 
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -25,13 +23,17 @@ export default function Home() {
     setActiveIdx(0);
   };
 
- 
   const maybeRenameActive = (firstUserText) => {
     if (!firstUserText) return;
     setChats((prev) =>
       prev.map((c, i) =>
         i === activeIdx && (c.title === "New Chat" || !c.title)
-          ? { ...c, title: firstUserText.slice(0, 30) + (firstUserText.length > 30 ? "..." : "") }
+          ? {
+              ...c,
+              title:
+                firstUserText.slice(0, 30) +
+                (firstUserText.length > 30 ? "..." : ""),
+            }
           : c
       )
     );
@@ -40,85 +42,58 @@ export default function Home() {
   const setActiveMessages = (updater) => {
     setChats((prev) =>
       prev.map((c, i) =>
-        i === activeIdx ? { ...c, messages: typeof updater === "function" ? updater(c.messages) : updater } : c
+        i === activeIdx
+          ? {
+              ...c,
+              messages:
+                typeof updater === "function" ? updater(c.messages) : updater,
+            }
+          : c
       )
     );
   };
 
-  const handleStreamChat = async () => {
+  // ==========================
+  // MAIN CHAT FUNCTION
+  // ==========================
+  const handleChat = async () => {
     const userText = message.trim();
     if (!userText || sending) return;
 
     setSending(true);
     setMessage("");
 
-    const baseMessages = [...messages, { role: "user", content: userText }];
-    setActiveMessages(baseMessages);
+    // Show user's message
+    setActiveMessages((prev) => [...prev, { role: "user", content: userText }]);
     maybeRenameActive(userText);
 
-    let assistantAdded = false;
-    let assistantReply = "";
-
     try {
-      const res = await fetch("/api/chat-stream", {
+      // Call FastAPI backend
+      const res = await fetch("http://127.0.0.1:8000/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: baseMessages }), 
+        body: JSON.stringify({ text: userText }),
       });
+      const data = await res.json();
+      const prediction = data.prediction;
 
-      if (!res.ok || !res.body) {
-        throw new Error("No response body from server.");
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6);
-          if (jsonStr === "[DONE]") break;
-
-          try {
-            const data = JSON.parse(jsonStr);
-            const piece = data.content || "";
-            if (!piece) continue;
-
-            assistantReply += piece;
-
-       
-            if (!assistantAdded) {
-              assistantAdded = true;
-              setActiveMessages((prev) => [...prev, { role: "assistant", content: "" }]);
-            }
-
-            setActiveMessages((prev) => {
-              if (prev.length === 0) return prev;
-              const last = prev[prev.length - 1];
-              if (last.role !== "assistant") return prev; // safety
-              const updatedLast = { ...last, content: assistantReply };
-              return [...prev.slice(0, -1), updatedLast];
-            });
-          } catch {
-         
-          }
-        }
-      }
+     
+      // Show assistant message
+      setActiveMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: `Prediction: ${prediction}` },
+      ]);
     } catch (err) {
-      const fallback = `Error: ${err?.message || "stream failed"}`;
-      setActiveMessages((prev) => [...prev, { role: "assistant", content: fallback }]);
+      setActiveMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: `Error: ${err?.message || "Failed"}` },
+      ]);
     }
 
     setSending(false);
   };
 
+  // Download chat as text
   const handleDownload = () => {
     const chat = chats[activeIdx];
     if (!chat) return;
@@ -138,7 +113,7 @@ export default function Home() {
 
   return (
     <div className="h-screen w-screen grid grid-cols-[260px_1fr] bg-gray-100">
- 
+      {/* Sidebar */}
       <aside className="h-full bg-gray-900 text-white flex flex-col">
         <div className="p-4 flex items-center justify-between border-b border-gray-800">
           <h2 className="text-lg font-bold">💬 My Chats</h2>
@@ -149,7 +124,6 @@ export default function Home() {
             + New
           </button>
         </div>
-
         <nav className="flex-1 overflow-y-auto p-2 space-y-1">
           {chats.map((c, i) => (
             <button
@@ -164,7 +138,6 @@ export default function Home() {
             </button>
           ))}
         </nav>
-
         <div className="p-3 border-t border-gray-800">
           <button
             onClick={handleDownload}
@@ -175,15 +148,13 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* MAIN CHAT AREA */}
+      {/* Main Chat Area */}
       <main className="h-full flex flex-col">
-        {/* Header */}
         <header className="px-6 py-4 bg-white border-b">
-          <h1 className="text-2xl font-bold text-gray-800">🤖 ChatBot AI</h1>
-          <p className="text-sm text-gray-500">Next.js • OpenRouter • Streaming</p>
+          <h1 className="text-2xl font-bold text-gray-800">🤖 SE Detector ChatBot</h1>
+          <p className="text-sm text-gray-500">Next.js • FastAPI • ML Prediction</p>
         </header>
 
-        {/* Messages */}
         <section className="flex-1 overflow-y-auto p-6 space-y-3 bg-gray-50">
           {messages.length === 0 ? (
             <p className="text-gray-400 italic">Start a conversation…</p>
@@ -207,7 +178,6 @@ export default function Home() {
           )}
         </section>
 
-        {/* Input */}
         <footer className="p-4 bg-white border-t">
           <div className="flex gap-2">
             <textarea
@@ -218,7 +188,7 @@ export default function Home() {
               className="flex-1 p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 bg-gray-50"
             />
             <button
-              onClick={handleStreamChat}
+              onClick={handleChat}
               disabled={sending || !message.trim()}
               className="px-5 py-3 bg-purple-600 text-white rounded-xl disabled:bg-gray-400 hover:bg-purple-700"
             >
