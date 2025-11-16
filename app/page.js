@@ -151,7 +151,7 @@ export default function Home() {
       {/* Main Chat Area */}
       <main className="h-full flex flex-col">
         <header className="px-6 py-4 bg-white border-b">
-          <h1 className="text-2xl font-bold text-gray-800">🤖 SE Detector ChatBot</h1>
+          <h1 className="text-2xl font-bold text-gray-800">🤖 Social Engineering Detector ChatBot</h1>
           <p className="text-sm text-gray-500">Next.js • FastAPI • ML Prediction</p>
         </header>
 
