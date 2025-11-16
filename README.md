@@ -75,7 +75,8 @@ This chatbot provides a **web-based solution** where users input messages and re
 
 ## 7. Local Setup Instructions
 
- project-folder/
+ #7.1 project-folder/
+ 
 ├─Chatbot info/
  │   ├─ ml_backend/
        ├─ dataset_cleaned.csv 
@@ -88,7 +89,7 @@ This chatbot provides a **web-based solution** where users input messages and re
               └─ chat-stream/
                    └─ route.ts/
 ├─ README.md       
-6.2 Installation Instructions
+# 7.2 Installation Instructions
 Clone the repository:
 Gitclone https://github.com/Khadija-tulkubra/AI_Chatbot-for-social-engineering-attack-detection
             cd Chatbot Info
@@ -102,6 +103,9 @@ Frontend Setup:
 
 Open your browser and access frontend at http://localhost:3000.
 
+<img width="1366" height="718" alt="image" src="https://github.com/user-attachments/assets/a02897a4-a1a6-44b1-9a96-0af7ba52209f" />
+
+
 
 Chat with the bot and see safe/unsafe predictions.
 
@@ -109,5 +113,4 @@ Chat with the bot and see safe/unsafe predictions.
 
 
 
-### 7.1 Project Structure
 
