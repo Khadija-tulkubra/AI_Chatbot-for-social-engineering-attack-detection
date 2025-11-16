@@ -9,16 +9,22 @@ import random
 import re
 
 # 1. Load
-df = pd.read_csv("dataset_cleaned.csv")  # your cleaned CSV with columns 'label','message'
+df = pd.read_csv("dataset_cleaned.csv")  
 
-# 2. Normalize labels -> safe / unsafe
+# 2. Normalize labels  safe / unsafe
 df['label'] = df['label'].replace({'social_engineering':'unsafe', 'safe':'safe', 'spam':'unsafe'})
 
 # 3. Basic rule-based auto labelling to catch missed dangerous messages
 # Add simple heuristics: URLs, urgent words, 'click', 'verify', 'password', money requests
-url_regex = re.compile(r'https?://|www\.|\.[a-z]{2,3}/')
+url_regex = re.compile(r'https?://|www\.|\.([a-z]{2,10})(\/|$)')
+
 urgent_keywords = ['urgent', 'immediately', '24 hours', 'suspend', 'suspended', 'verify', 'click here',
                    'reset', 'password', 'account', 'bank', 'transfer', 'pay', 'login', 'secure-login']
+
+urgent_keywords.extend([
+    'otp', 'cnic', 'pta', 'sim block', 'gift', 'bonus',
+    'lottery', 'tax refund', 'identity', 'block', 'security alert'
+])
 
 
 
@@ -33,7 +39,7 @@ def rule_label(text):
 
 # Apply rules to unlabeled or to confirm labels (optional)
 df['auto_rule'] = df['message'].apply(rule_label)
-# If rule says unsafe, set label to unsafe (this may overwrite some but helps boost positives)
+# Overwrite only if auto_rule says unsafe
 df.loc[df['auto_rule']=='unsafe', 'label'] = 'unsafe'
 df = df.drop(columns=['auto_rule'])
 
@@ -62,6 +68,14 @@ templates = [
     "You've won a prize! Claim now: {}",
     "Verify your account: {} to avoid suspension"
 ]
+templates.extend([
+    "Your CNIC is under verification. Confirm immediately: {}",
+    "Tax refund available. Submit details here: {}",
+    "PTA SIM suspension alert. Verify now: {}",
+    "Your bank account is frozen. Proceed to unlock: {}",
+    "Security alert: suspicious login detected from Karachi: {}"
+])
+
 def make_fake_link(i): return f"http://fake-link{i}.com/reset"
 
 aug = []

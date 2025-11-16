@@ -53,9 +53,7 @@ export default function Home() {
     );
   };
 
-  // ==========================
-  // MAIN CHAT FUNCTION
-  // ==========================
+
   const handleChat = async () => {
     const userText = message.trim();
     if (!userText || sending) return;
@@ -63,12 +61,12 @@ export default function Home() {
     setSending(true);
     setMessage("");
 
-    // Show user's message
+  
     setActiveMessages((prev) => [...prev, { role: "user", content: userText }]);
     maybeRenameActive(userText);
 
     try {
-      // Call FastAPI backend
+    
       const res = await fetch("http://127.0.0.1:8000/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,8 +75,7 @@ export default function Home() {
       const data = await res.json();
       const prediction = data.prediction;
 
-     
-      // Show assistant message
+ 
       setActiveMessages((prev) => [
         ...prev,
         { role: "assistant", content: `Prediction: ${prediction}` },
@@ -93,7 +90,6 @@ export default function Home() {
     setSending(false);
   };
 
-  // Download chat as text
   const handleDownload = () => {
     const chat = chats[activeIdx];
     if (!chat) return;
