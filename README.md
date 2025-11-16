@@ -75,7 +75,7 @@ This chatbot provides a **web-based solution** where users input messages and re
 
 ## 7. Local Setup Instructions
 
- #7.1 project-folder/
+ # 7.1 project-folder/
  
 ├─Chatbot info/
  │   ├─ ml_backend/
@@ -108,6 +108,7 @@ Open your browser and access frontend at http://localhost:3000.
 
 
 Chat with the bot and see safe/unsafe predictions.
+
 
 
 
